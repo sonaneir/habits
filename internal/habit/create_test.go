@@ -13,14 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreq(t *testing.T) {
+func TestCreate(t *testing.T) {
 	h := habit.Habit{
 		Name:            "swim",
 		WeeklyFrequency: 2,
 		CreationTime:    time.Now(),
 		ID:              "123",
 	}
-	ctx := context.Background()
 
 	dbErr := fmt.Errorf("db unavailable")
 
@@ -31,7 +30,7 @@ func TestCreq(t *testing.T) {
 		"nominal": {
 			db: func(ctl *minimock.Controller) *mocks.HabitCreatorMock {
 				db := mocks.NewHabitCreatorMock(ctl)
-				db.AddMock.Expect(ctx, h).Return(nil)
+				db.AddMock.Expect(minimock.AnyContext, h).Return(nil)
 				return db
 			},
 			expectedErr: nil,
@@ -39,10 +38,27 @@ func TestCreq(t *testing.T) {
 		"error case": {
 			db: func(ctl *minimock.Controller) *mocks.HabitCreatorMock {
 				db := mocks.NewHabitCreatorMock(ctl)
-				db.AddMock.Expect(ctx, h).Return(dbErr)
+				db.AddMock.Expect(minimock.AnyContext, h).Return(dbErr)
 				return db
 			},
 			expectedErr: dbErr,
+		},
+		"db timeout": {
+			db: func(ctl *minimock.Controller) *mocks.HabitCreatorMock {
+				db := mocks.NewHabitCreatorMock(ctl)
+				db.AddMock.Set(
+					func(ctx context.Context, habit habit.Habit) error {
+						select {
+						// This duration is longer than a database call
+						case <-time.After(2 * time.Second):
+							return nil
+						case <-ctx.Done():
+							return ctx.Err()
+						}
+					})
+				return db
+			},
+			expectedErr: context.DeadlineExceeded,
 		},
 	}
 

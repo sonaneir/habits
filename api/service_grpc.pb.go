@@ -8,7 +8,6 @@ package api
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -21,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Habits_CreateHabit_FullMethodName = "/habits.Habits/CreateHabit"
+	Habits_ListHabits_FullMethodName  = "/habits.Habits/ListHabits"
 )
 
 // HabitsClient is the client API for Habits service.
@@ -31,6 +31,8 @@ const (
 type HabitsClient interface {
 	// CreateHabit is the endpoint that registers a habit.
 	CreateHabit(ctx context.Context, in *CreateHabitRequest, opts ...grpc.CallOption) (*CreateHabitResponse, error)
+	// ListHabits is the endpoint that returns all habits.
+	ListHabits(ctx context.Context, in *ListHabitsRequest, opts ...grpc.CallOption) (*ListHabitsResponse, error)
 }
 
 type habitsClient struct {
@@ -51,6 +53,16 @@ func (c *habitsClient) CreateHabit(ctx context.Context, in *CreateHabitRequest, 
 	return out, nil
 }
 
+func (c *habitsClient) ListHabits(ctx context.Context, in *ListHabitsRequest, opts ...grpc.CallOption) (*ListHabitsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListHabitsResponse)
+	err := c.cc.Invoke(ctx, Habits_ListHabits_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // HabitsServer is the server API for Habits service.
 // All implementations should embed UnimplementedHabitsServer
 // for forward compatibility.
@@ -59,6 +71,8 @@ func (c *habitsClient) CreateHabit(ctx context.Context, in *CreateHabitRequest, 
 type HabitsServer interface {
 	// CreateHabit is the endpoint that registers a habit.
 	CreateHabit(context.Context, *CreateHabitRequest) (*CreateHabitResponse, error)
+	// ListHabits is the endpoint that returns all habits.
+	ListHabits(context.Context, *ListHabitsRequest) (*ListHabitsResponse, error)
 }
 
 // UnimplementedHabitsServer should be embedded to have
@@ -70,6 +84,9 @@ type UnimplementedHabitsServer struct{}
 
 func (UnimplementedHabitsServer) CreateHabit(context.Context, *CreateHabitRequest) (*CreateHabitResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateHabit not implemented")
+}
+func (UnimplementedHabitsServer) ListHabits(context.Context, *ListHabitsRequest) (*ListHabitsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListHabits not implemented")
 }
 func (UnimplementedHabitsServer) testEmbeddedByValue() {}
 
@@ -109,6 +126,24 @@ func _Habits_CreateHabit_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Habits_ListHabits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListHabitsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HabitsServer).ListHabits(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Habits_ListHabits_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HabitsServer).ListHabits(ctx, req.(*ListHabitsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Habits_ServiceDesc is the grpc.ServiceDesc for Habits service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -119,6 +154,10 @@ var Habits_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateHabit",
 			Handler:    _Habits_CreateHabit_Handler,
+		},
+		{
+			MethodName: "ListHabits",
+			Handler:    _Habits_ListHabits_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

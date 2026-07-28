@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"habits/api"
 	"habits/internal/habit"
@@ -13,6 +14,13 @@ import (
 
 // CreateHabit is the endpoint that registers a habit.
 func (s *Server) CreateHabit(ctx context.Context, request *api.CreateHabitRequest) (*api.CreateHabitResponse, error) {
+	s.lgr.Logf("Create request received: %s", request)
+
+	err := validateCreateHabitRequest(request)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request: "+err.Error())
+	}
+
 	var freq uint
 	if request.WeeklyFrequency != nil {
 		freq = uint(*request.WeeklyFrequency)
@@ -41,4 +49,14 @@ func (s *Server) CreateHabit(ctx context.Context, request *api.CreateHabitReques
 			WeeklyFrequency: int32(createHabit.WeeklyFrequency),
 		},
 	}, nil
+}
+
+func validateCreateHabitRequest(request *api.CreateHabitRequest) error {
+	switch {
+	case request == nil:
+		return fmt.Errorf("empty request")
+	case request.Name == "":
+		return fmt.Errorf("missing name of habit")
+	}
+	return nil
 }

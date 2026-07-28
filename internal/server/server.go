@@ -9,7 +9,9 @@ import (
 	"habits/api"
 	"habits/internal/habit"
 
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // Server is the implementation of the gRPC server.
@@ -34,7 +36,7 @@ func New(repo Repository, lgr Logger) *Server {
 }
 
 // ListenAndServe starts listening to the port and serving requests.
-func (s *Server) ListenAndServe(port int) error {
+func (s *Server) ListenAndServe(ctx context.Context, port int) error {
 	const addr = "127.0.0.1"
 
 	listener, err := net.Listen("tcp", net.JoinHostPort(addr, strconv.Itoa(port)))
@@ -42,18 +44,51 @@ func (s *Server) ListenAndServe(port int) error {
 		return fmt.Errorf("unable to listen to tcp port %d: %w", port, err)
 	}
 
-	grpcServer := grpc.NewServer()
-	api.RegisterHabitsServer(grpcServer, s)
+	grpcServer := s.registerGRPCServer()
+	s.lgr.Logf("gRPC server started and listening to port %d", port)
 
-	s.lgr.Logf("starting server on port %d\n", port)
+	// Use a channel to report errors from the gRPC server back to
+	errChan := make(chan error)
+	g := errgroup.Group{}
+	defer func() {
+		err := g.Wait()
+		if err != nil {
+			errChan <- fmt.Errorf("error while serving: %w", err)
+		}
+		close(errChan)
+	}()
 
-	err = grpcServer.Serve(listener)
-	if err != nil {
-		return fmt.Errorf("error while listening: %w", err)
+	// ListenAndServe to the port. This will only return when something kills or stops the server.
+	g.Go(func() error {
+		// This goroutine will be killed when the context is ended at the end of this function.
+		err := grpcServer.Serve(listener)
+		if err != nil {
+			s.lgr.Logf("error while serving gRPC: %s", err)
+
+			return fmt.Errorf("gRPC server error: %w", err)
+		}
+
+		return nil
+	})
+
+	select {
+	case <-ctx.Done():
+		// Stop or GracefulStop was called, no reason to be alarmed.
+		s.lgr.Logf("Shutting down grpc server: %s", ctx.Err())
+	case err = <-errChan:
+		s.lgr.Logf("unable to serve: %s", err)
 	}
 
-	// Stop or GracefulStop was called, no reason to be alarmed.
+	grpcServer.GracefulStop()
+	_ = listener.Close()
 	return nil
+}
+
+func (s *Server) registerGRPCServer() *grpc.Server {
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(timerInterceptor(s.lgr)))
+	api.RegisterHabitsServer(grpcServer, s)
+	reflection.Register(grpcServer) // if env == dev
+	return grpcServer
 }
 
 // Logger used by the server

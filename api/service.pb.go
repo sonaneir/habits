@@ -7,12 +7,11 @@
 package api
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -122,6 +121,88 @@ func (x *CreateHabitResponse) GetHabit() *Habit {
 	return nil
 }
 
+// ListHabitsRequest is the request to list all the habits saved.
+type ListHabitsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListHabitsRequest) Reset() {
+	*x = ListHabitsRequest{}
+	mi := &file_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListHabitsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListHabitsRequest) ProtoMessage() {}
+
+func (x *ListHabitsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListHabitsRequest.ProtoReflect.Descriptor instead.
+func (*ListHabitsRequest) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{2}
+}
+
+// ListHabitsResponse is the response with all the saved habits.
+type ListHabitsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Habits        []*Habit               `protobuf:"bytes,1,rep,name=habits,proto3" json:"habits,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListHabitsResponse) Reset() {
+	*x = ListHabitsResponse{}
+	mi := &file_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListHabitsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListHabitsResponse) ProtoMessage() {}
+
+func (x *ListHabitsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListHabitsResponse.ProtoReflect.Descriptor instead.
+func (*ListHabitsResponse) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListHabitsResponse) GetHabits() []*Habit {
+	if x != nil {
+		return x.Habits
+	}
+	return nil
+}
+
 var File_service_proto protoreflect.FileDescriptor
 
 const file_service_proto_rawDesc = "" +
@@ -132,9 +213,14 @@ const file_service_proto_rawDesc = "" +
 	"\x10weekly_frequency\x18\x02 \x01(\x05H\x00R\x0fweeklyFrequency\x88\x01\x01B\x13\n" +
 	"\x11_weekly_frequency\":\n" +
 	"\x13CreateHabitResponse\x12#\n" +
-	"\x05habit\x18\x01 \x01(\v2\r.habits.HabitR\x05habit2P\n" +
+	"\x05habit\x18\x01 \x01(\v2\r.habits.HabitR\x05habit\"\x13\n" +
+	"\x11ListHabitsRequest\";\n" +
+	"\x12ListHabitsResponse\x12%\n" +
+	"\x06habits\x18\x01 \x03(\v2\r.habits.HabitR\x06habits2\x95\x01\n" +
 	"\x06Habits\x12F\n" +
-	"\vCreateHabit\x12\x1a.habits.CreateHabitRequest\x1a\x1b.habits.CreateHabitResponseB\fZ\n" +
+	"\vCreateHabit\x12\x1a.habits.CreateHabitRequest\x1a\x1b.habits.CreateHabitResponse\x12C\n" +
+	"\n" +
+	"ListHabits\x12\x19.habits.ListHabitsRequest\x1a\x1a.habits.ListHabitsResponseB\fZ\n" +
 	"habits/apib\x06proto3"
 
 var (
@@ -149,21 +235,26 @@ func file_service_proto_rawDescGZIP() []byte {
 	return file_service_proto_rawDescData
 }
 
-var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_service_proto_goTypes = []any{
 	(*CreateHabitRequest)(nil),  // 0: habits.CreateHabitRequest
 	(*CreateHabitResponse)(nil), // 1: habits.CreateHabitResponse
-	(*Habit)(nil),               // 2: habits.Habit
+	(*ListHabitsRequest)(nil),   // 2: habits.ListHabitsRequest
+	(*ListHabitsResponse)(nil),  // 3: habits.ListHabitsResponse
+	(*Habit)(nil),               // 4: habits.Habit
 }
 var file_service_proto_depIdxs = []int32{
-	2, // 0: habits.CreateHabitResponse.habit:type_name -> habits.Habit
-	0, // 1: habits.Habits.CreateHabit:input_type -> habits.CreateHabitRequest
-	1, // 2: habits.Habits.CreateHabit:output_type -> habits.CreateHabitResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	4, // 0: habits.CreateHabitResponse.habit:type_name -> habits.Habit
+	4, // 1: habits.ListHabitsResponse.habits:type_name -> habits.Habit
+	0, // 2: habits.Habits.CreateHabit:input_type -> habits.CreateHabitRequest
+	2, // 3: habits.Habits.ListHabits:input_type -> habits.ListHabitsRequest
+	1, // 4: habits.Habits.CreateHabit:output_type -> habits.CreateHabitResponse
+	3, // 5: habits.Habits.ListHabits:output_type -> habits.ListHabitsResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_service_proto_init() }
@@ -179,7 +270,7 @@ func file_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_proto_rawDesc), len(file_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
