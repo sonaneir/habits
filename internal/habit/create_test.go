@@ -7,30 +7,41 @@ import (
 	"time"
 
 	"habits/internal/habit"
+	"habits/internal/habit/mocks"
 
+	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreate(t *testing.T) {
+func TestCreq(t *testing.T) {
 	h := habit.Habit{
 		Name:            "swim",
 		WeeklyFrequency: 2,
 		CreationTime:    time.Now(),
 		ID:              "123",
 	}
+	ctx := context.Background()
 
 	dbErr := fmt.Errorf("db unavailable")
 
 	tests := map[string]struct {
-		db          *habitAdder
+		db          func(ctl *minimock.Controller) *mocks.HabitCreatorMock
 		expectedErr error
 	}{
 		"nominal": {
-			db:          &habitAdder{},
+			db: func(ctl *minimock.Controller) *mocks.HabitCreatorMock {
+				db := mocks.NewHabitCreatorMock(ctl)
+				db.AddMock.Expect(ctx, h).Return(nil)
+				return db
+			},
 			expectedErr: nil,
 		},
 		"error case": {
-			db:          &habitAdder{err: dbErr},
+			db: func(ctl *minimock.Controller) *mocks.HabitCreatorMock {
+				db := mocks.NewHabitCreatorMock(ctl)
+				db.AddMock.Expect(ctx, h).Return(dbErr)
+				return db
+			},
 			expectedErr: dbErr,
 		},
 	}
@@ -41,21 +52,15 @@ func TestCreate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := habit.Create(context.Background(), tt.db, h)
+			ctrl := minimock.NewController(t)
+
+			db := tt.db(ctrl)
+
+			got, err := habit.Create(context.Background(), db, h)
 			assert.ErrorIs(t, err, tt.expectedErr)
 			if tt.expectedErr == nil {
 				assert.Equal(t, h.Name, got.Name)
 			}
 		})
 	}
-}
-
-// habitAdder is a stub for our database
-type habitAdder struct {
-	err error
-}
-
-// Add implements the habitCreator interface
-func (ha *habitAdder) Add(ctx context.Context, habit habit.Habit) error {
-	return ha.err
 }
