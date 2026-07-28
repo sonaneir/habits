@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strconv"
 
 	"habits/api"
+	"habits/internal/habit"
 
 	"google.golang.org/grpc"
 )
@@ -13,12 +15,20 @@ import (
 // Server is the implementation of the gRPC server.
 type Server struct {
 	api.UnimplementedHabitsServer
+	db  Repository
 	lgr Logger
 }
 
+// A Repository is used by the Server to interact with the database.
+type Repository interface {
+	Add(ctx context.Context, habit habit.Habit) error
+	FindAll(ctx context.Context) ([]habit.Habit, error)
+}
+
 // New returns a Server that can ListenAndServe.
-func New(lgr Logger) *Server {
+func New(repo Repository, lgr Logger) *Server {
 	return &Server{
+		db:  repo,
 		lgr: lgr,
 	}
 }
