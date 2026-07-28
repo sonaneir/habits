@@ -4,27 +4,34 @@ import (
 	"context"
 	"fmt"
 	"net"
+	_ "net/http/pprof"
 	"strconv"
-
-	"habits/api"
-	"habits/internal/habit"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"habits/api"
+	"habits/internal/habit"
 )
 
 // Server is the implementation of the gRPC server.
 type Server struct {
 	api.UnimplementedHabitsServer
-	db  Repository
+
 	lgr Logger
+	db  Repository
 }
 
 // A Repository is used by the Server to interact with the database.
 type Repository interface {
 	Add(ctx context.Context, habit habit.Habit) error
+	Find(ctx context.Context, id habit.ID) (habit.Habit, error)
 	FindAll(ctx context.Context) ([]habit.Habit, error)
+	AddTick(ctx context.Context, id habit.ID, t time.Time) error
+	FindAllTicks(ctx context.Context, id habit.ID) ([]time.Time, error)
+	FindWeeklyTicks(ctx context.Context, id habit.ID, t time.Time) ([]time.Time, error)
 }
 
 // New returns a Server that can ListenAndServe.

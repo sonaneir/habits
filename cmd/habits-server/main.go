@@ -24,6 +24,7 @@ func main() {
 	lgr := log.New(os.Stdout)
 
 	db := repository.New(lgr)
+
 	srv := server.New(db, lgr)
 
 	err := srv.ListenAndServe(ctx, port)
